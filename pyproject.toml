@@ -1,0 +1,56 @@
+[project]
+name = "MFG-C2-140"
+version = "0.1.0"
+description = "Manufacturing Process Validation IQ/OQ/PQ Evidence Gap Agent — reconciles IQ/OQ/PQ validation packages against protocol and acceptance criteria, and drafts a reviewer-ready gap brief."
+requires-python = ">=3.11"
+# agenticstar-agentcore is served from the internal package registry (not public
+# PyPI). The extras cover the LLM client (openai) and the Marketplace runner
+# (marketplace, needed by cli.py). Re-verify [tool.uv] override-dependencies below
+# whenever this pin changes.
+dependencies = [
+    "agenticstar-agentcore[openai,marketplace]==1.0.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.0.3",
+    "pytest-cov==5.0.0",
+    "pytest-asyncio==1.4.0",
+    "ruff==0.4.4",
+    "mypy==1.10.0",
+]
+
+[tool.uv]
+# agenticstar-agentcore's published package-index metadata can pin a
+# langchain-core version incompatible with what its own "openai" extra
+# (-> langchain-openai) requires, which makes the registry install
+# unsatisfiable. Force the SDK-compatible version the agentcore release
+# actually ships with; re-verify this pin if the agenticstar-agentcore version
+# above ever changes.
+override-dependencies = [
+    "langchain-core==1.5.4",
+]
+
+[build-system]
+requires = ["setuptools==68.2.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+# The agenticstar-agentcore wheel ships no py.typed marker, so mypy treats its
+# framework/shared packages as untyped. Relax only what that causes: missing
+# stubs for those imports, and subclassing their (then Any-typed) base classes.
+# Everything else in src/ stays strict.
+[[tool.mypy.overrides]]
+module = ["framework.*", "shared.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["src.*"]
+disallow_subclassing_any = false
